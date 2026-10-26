@@ -1,0 +1,12 @@
+name = "chat-test-ai"
+main = "worker.js"
+compatibility_date = "2025-10-01"
+
+# 模式 2：Cloudflare Workers AI（不配 RELAY_URL 时用这个，免费）
+[ai]
+binding = "AI"
+
+# 模式 1：中转站 / OpenAI 兼容接口（配了 RELAY_URL 就优先走这里）
+[vars]
+RELAY_URL = "https://api.supergpt.dev/v1/chat/completions"
+RELAY_MODEL = "gpt-5.6-sol"

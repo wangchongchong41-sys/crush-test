@@ -126,6 +126,21 @@
     margin-bottom: 8px; font-size: 14px; cursor: pointer; transition: .15s; background: #fdfaf4;
   }
   .opt.sel { border-color: #3b3129; background: #f2e9d9; color: #3b3129; font-weight: 600; }
+  /* 付费锁定 */
+  .locked .evi, .locked .ai-box { filter: blur(7px); pointer-events: none; user-select: none; }
+  .lockcard {
+    margin-top: 16px; border: 1px solid #e4d8c4; border-radius: 16px;
+    padding: 18px; text-align: center; background: #fdfaf4;
+  }
+  .lock-t { font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+  .lock-d { font-size: 12px; color: #a08e7c; margin-top: 8px; line-height: 1.8; }
+  .lockcard input {
+    width: 100%; margin-top: 12px; border: 1px solid #e4d8c4; border-radius: 10px;
+    padding: 11px; font-size: 15px; text-align: center; letter-spacing: 2px;
+    font-family: ui-monospace, monospace; background: #fff; color: #3b3129;
+  }
+  .lockcard .btn { margin-top: 10px; }
+  .lock-buy { display: inline-block; margin-top: 12px; font-size: 12px; color: #a97f5e; }
   .hidden { display: none !important; }
   #shareImg { width: 100%; border-radius: 14px; margin-top: 12px; }
 </style>
@@ -203,6 +218,13 @@
       <div class="tier-sub" id="tierDesc"></div>
       <div class="ai-box hidden" id="aiBox"><div class="ai-tag">AI 深度解读</div><div id="aiText"></div></div>
       <ul class="evi" id="eviList"><div class="evi-title">分析依据</div></ul>
+      <div class="lockcard hidden" id="lockCard">
+        <div class="lock-t">♡ 解锁完整分析报告</div>
+        <div class="lock-d">查看全部心动信号 · AI 深度解读 · 行动建议<br>一杯奶茶钱，看清这段关系</div>
+        <input id="codeInput" placeholder="HT-XXXX-XXXX" autocomplete="off">
+        <button class="btn" id="btnUnlock">立即解锁</button>
+        <a class="lock-buy" id="sellLink" href="#" target="_blank" rel="noopener">还没有激活码？点这里购买 →</a>
+      </div>
       <p class="fine">♡ 截图发给 TA 或发到姐妹群，看看大家怎么说 ♡</p>
     </div>
     <button class="btn" id="btnShare">生成分享图</button>
@@ -228,6 +250,17 @@ const $ = s => document.querySelector(s);
 // 留空 = 纯本地规则分析。
 const AI_ENDPOINT = "https://chat-test-ai.wangchongchong41.workers.dev";
 const AI_TOKEN = ""; // 接口需要鉴权时填
+// ===================================
+
+// ============ 付费解锁 ============
+// PAYWALL=true 时结果页只露分数，完整报告需输入激活码
+// CODE_SALT 改成你自己的随机串，别用默认值
+// SELL_LINK 填你的购买链接（微店/爱发电/咸鱼卡密商品页）
+// VERIFY_URL 以后域名配好了填 Worker 验码接口，服务端验码更稳
+const PAYWALL = true;
+const CODE_SALT = "crush2026";
+const SELL_LINK = "#";
+const VERIFY_URL = "";
 // ===================================
 
 // 启用 AI 后聊天记录会发送到接口，页脚隐私说明同步更新
@@ -476,6 +509,7 @@ async function showResult(score, evi, msgs, myName, theirName){
   list.innerHTML = '<div class="evi-title">分析依据</div>';
   for (const e of evi){ const li = document.createElement("li"); li.textContent = e; list.appendChild(li); }
   $("#aiBox").classList.add("hidden");
+  applyLock();
   const C = 452.4;
   $("#ringFg").style.strokeDashoffset = C;
   $("#scoreText").textContent = "0";
@@ -497,6 +531,48 @@ async function showResult(score, evi, msgs, myName, theirName){
     }
   }
 }
+
+/* ---------- 付费解锁 ---------- */
+// 码格式：HT-XXXX-YYYY，XXXX 随机体，YYYY = hash(XXXX + SALT) 前 4 位
+const CODE_ABC = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+function codeHash(s){
+  let h = 5381;
+  for (let i = 0; i < s.length; i++){ h = ((h * 33) ^ s.charCodeAt(i)) >>> 0; }
+  let out = "";
+  for (let i = 0; i < 4; i++){ out += CODE_ABC[h % 32]; h = Math.floor(h / 32); }
+  return out;
+}
+function checkCode(code){
+  const c = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (!/^HT[A-Z0-9]{8}$/.test(c)) return false;
+  return codeHash(c.slice(2, 6) + CODE_SALT) === c.slice(6, 10);
+}
+const unlocked = () => localStorage.getItem("crush_unlock") === "1";
+function applyLock(){
+  const need = PAYWALL && !unlocked();
+  $("#resultInner").classList.toggle("locked", need);
+  $("#lockCard").classList.toggle("hidden", !need);
+  if (need && SELL_LINK) $("#sellLink").href = SELL_LINK;
+}
+$("#btnUnlock").addEventListener("click", async () => {
+  const code = $("#codeInput").value.trim();
+  if (!code) return;
+  let ok = checkCode(code);
+  if (!ok && VERIFY_URL){
+    try {
+      const r = await fetch(VERIFY_URL, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }) });
+      if (r.ok){ const j = await r.json(); ok = !!j.ok; }
+    } catch(e){}
+  }
+  if (ok){
+    localStorage.setItem("crush_unlock", "1");
+    applyLock();
+  } else {
+    $("#codeInput").value = "";
+    $("#codeInput").placeholder = "码不对，检查一下再试";
+  }
+});
 
 /* ---------- 交互 ---------- */
 $("#btnAnalyze").addEventListener("click", () => {

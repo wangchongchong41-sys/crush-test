@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TA 喜欢你吗 · 聊天记录心动分析</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    background:
+      radial-gradient(600px 300px at 50% -60px, rgba(217,160,143,.22), transparent),
+      linear-gradient(170deg, #faf7f1 0%, #f4ede1 50%, #f8f1e8 100%);
+    min-height: 100vh; color: #463a2f; padding: 20px 14px 48px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; }
+  header { text-align: center; padding: 30px 0 20px; }
+  .eyebrow {
+    font-size: 10px; letter-spacing: 6px; color: #b3a08b; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+  }
+  .eyebrow::before, .eyebrow::after {
+    content: ""; width: 34px; height: 1px; background: #d8c8b2;
+  }
+  .logo {
+    width: 52px; height: 52px; margin: 16px auto 0; border: 1px solid #d8c8b2;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 22px; color: #a96f49;
+  }
+  h1 {
+    font-family: Georgia, "Songti SC", "Noto Serif SC", "SimSun", serif;
+    font-size: 30px; font-weight: 700; margin-top: 14px; letter-spacing: 6px; color: #3d3128;
+  }
+  .sub { margin-top: 10px; font-size: 13px; color: #a08e7c; line-height: 1.9; letter-spacing: 1px; }
+  .badges { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px; letter-spacing: 1px; color: #a97f5e; background: transparent;
+    border: 1px solid #e0d2be; border-radius: 999px; padding: 4px 12px;
+  }
+  .card {
+    background: #fffdf9; border: 1px solid #ece1cf; border-radius: 24px; padding: 22px;
+    box-shadow: 0 1px 0 #fff inset, 0 14px 40px rgba(120, 90, 60, .09); margin-top: 18px;
+    position: relative;
+  }
+  .card::before {
+    content: ""; position: absolute; inset: 7px; border: 1px solid #f1e7d6;
+    border-radius: 18px; pointer-events: none;
+  }
+  .tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid #efe4d2; }
+  .tab {
+    flex: 1; text-align: center; padding: 10px 0; font-size: 14px; font-weight: 600;
+    color: #b3a08b; cursor: pointer; transition: .2s; letter-spacing: 2px;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab.on { color: #3d3128; border-bottom-color: #3d3128; }
+  textarea {
+    width: 100%; min-height: 150px; border: 1px solid #e4d8c4; border-radius: 12px;
+    padding: 13px; font-size: 13px; line-height: 1.7; resize: vertical;
+    font-family: inherit; color: #463a2f; background: #fdfaf4;
+  }
+  textarea:focus, input:focus, select:focus { outline: none; border-color: #a96f49; }
+  .names { display: flex; gap: 10px; margin-top: 12px; }
+  .names input {
+    flex: 1; border: 1px solid #e4d8c4; border-radius: 12px; padding: 11px 12px;
+    font-size: 13px; font-family: inherit; color: #463a2f; background: #fdfaf4;
+  }
+  .btn {
+    display: block; width: 100%; border: none; border-radius: 999px; padding: 15px;
+    font-size: 15px; font-weight: 600; color: #faf4ea; cursor: pointer; margin-top: 16px;
+    background: #3b3129; font-family: inherit; letter-spacing: 4px;
+    transition: transform .1s, background .2s;
+  }
+  .btn:hover { background: #52452f; }
+  .btn:active { transform: scale(.98); }
+  .btn.ghost {
+    background: transparent; color: #8a7458; border: 1px solid #dccbb2;
+    letter-spacing: 2px; font-weight: 500;
+  }
+  .tip { font-size: 12px; color: #b3a08b; margin-top: 12px; line-height: 1.8; }
+  details { margin-top: 10px; font-size: 12px; color: #b3a08b; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin-top: 6px; line-height: 1.9; }
+  .toast {
+    display: none; margin-top: 12px; padding: 11px 14px; border-radius: 12px;
+    background: #f6e9d8; color: #8a5a2b; font-size: 13px; line-height: 1.6;
+  }
+  .toast.show { display: block; }
+  /* result */
+  .rpt {
+    text-align: center; font-size: 10px; letter-spacing: 4px; color: #b3a08b;
+    font-weight: 600; margin-bottom: 4px; font-family: Georgia, serif;
+  }
+  .rpt b { color: #a96f49; }
+  .ring-wrap { text-align: center; padding: 8px 0 4px; }
+  .ring { width: 170px; height: 170px; }
+  .ring .bg { stroke: #efe2cd; }
+  .ring .fg { stroke: url(#grad); stroke-linecap: round; transition: stroke-dashoffset 1.4s cubic-bezier(.3,.9,.3,1); }
+  .ring-pct { font-size: 42px; font-weight: 400; fill: #3b3129; font-family: Georgia, serif; }
+  .ring-label { font-size: 10px; fill: #b3a08b; letter-spacing: 3px; }
+  .tier {
+    text-align: center; font-size: 21px; font-weight: 700; color: #3b3129; margin-top: 10px;
+    font-family: Georgia, "Songti SC", "Noto Serif SC", serif; letter-spacing: 3px;
+  }
+  .tier-sub { text-align: center; font-size: 13px; color: #a08e7c; margin-top: 10px; line-height: 1.9; }
+  .ai-box {
+    margin-top: 14px; padding: 14px 16px; border-radius: 12px; font-size: 14px; line-height: 1.9;
+    background: #f8f1e4; color: #6d5233; border-left: 3px solid #c9a97e;
+  }
+  .ai-box .ai-tag { font-size: 10px; font-weight: 700; color: #a96f49; letter-spacing: 3px; margin-bottom: 6px; }
+  .evi { margin-top: 18px; border-top: 1px solid #eee2cd; padding-top: 14px; }
+  .evi-title {
+    font-size: 11px; font-weight: 700; color: #b3a08b; margin-bottom: 10px;
+    letter-spacing: 4px; text-align: center;
+  }
+  .evi li {
+    font-size: 14px; line-height: 2.1; color: #5d4b3c; list-style: none;
+    padding: 2px 0 2px 22px; position: relative;
+  }
+  .evi li::before { content: "♡"; position: absolute; left: 2px; color: #c9a97e; font-size: 12px; }
+  .fine { font-size: 11px; color: #c4b39e; text-align: center; margin-top: 18px; line-height: 1.8; }
+  footer { text-align: center; font-size: 11px; color: #c4b39e; margin-top: 24px; line-height: 1.9; }
+  .q { margin-bottom: 18px; }
+  .q-t { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  .opt {
+    display: block; padding: 11px 14px; border: 1px solid #e4d8c4; border-radius: 12px;
+    margin-bottom: 8px; font-size: 14px; cursor: pointer; transition: .15s; background: #fdfaf4;
+  }
+  .opt.sel { border-color: #3b3129; background: #f2e9d9; color: #3b3129; font-weight: 600; }
+  .hidden { display: none !important; }
+  #shareImg { width: 100%; border-radius: 14px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CRUSH LAB · 心动研究所</div>
+    <div class="logo">♡</div>
+    <h1>TA 喜欢你吗</h1>
+    <p class="sub">把你们的聊天记录粘进来<br>让数据告诉你 TA 的真实心意</p>
+    <div class="badges">
+      <span class="badge">♡ 聊天记录本地分析</span>
+      <span class="badge">♡ 不上传不存储</span>
+      <span class="badge">♡ 30 秒出结果</span>
+    </div>
+  </header>
+
+  <div class="card" id="inputCard">
+    <div class="tabs">
+      <div class="tab on" data-tab="chat">粘贴聊天记录</div>
+      <div class="tab" data-tab="quiz">快速答题</div>
+    </div>
+
+    <div id="paneChat">
+      <textarea id="chatInput" placeholder="把聊天记录粘贴到这里…
+
+支持微信/QQ 复制的格式，例如：
+小明 2024/10/20 23:12
+在干嘛呢
+想你了
+
+小红 2024/10/20 23:12
+早点睡呀 晚安"></textarea>
+      <div class="names">
+        <input id="myName" placeholder="你的昵称（可留空自动识别）">
+        <input id="theirName" placeholder="TA 的昵称（可留空自动识别）">
+      </div>
+      <button class="btn" id="btnAnalyze">开始分析</button>
+      <button class="btn ghost" id="btnDemo">先看看演示效果</button>
+      <div class="toast" id="toast"></div>
+      <details>
+        <summary>怎么复制聊天记录？</summary>
+        <p><b>电脑端微信</b>：按住鼠标拖选多条消息 → 右键复制 → 粘贴到这里。<br>
+        <b>手机端</b>：长按消息 → 多选 → 逐条复制，或在输入框长按粘贴。<br>
+        昵称填不填都可以，系统会自动识别出最常出现的两个人。</p>
+      </details>
+      <p class="tip">♡ 分析完全在你的浏览器里进行，关掉页面数据就没了，放心粘贴。</p>
+    </div>
+
+    <div id="paneQuiz" class="hidden">
+      <div id="quizBox"></div>
+      <button class="btn" id="btnQuiz">生成结果</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <div id="resultInner">
+      <div class="rpt">CRUSH REPORT <b>♡</b> NO.<span id="rptNo"></span></div>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 170 170">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#3b3129"/><stop offset="100%" stop-color="#c9a97e"/>
+            </linearGradient>
+          </defs>
+          <circle class="bg" cx="85" cy="85" r="72" fill="none" stroke-width="11"/>
+          <circle class="fg" id="ringFg" cx="85" cy="85" r="72" fill="none" stroke-width="11"
+                  stroke-dasharray="452.4" stroke-dashoffset="452.4" transform="rotate(-90 85 85)"/>
+          <text class="ring-pct" id="scoreText" x="85" y="88" text-anchor="middle">0</text>
+          <text class="ring-label" x="85" y="112" text-anchor="middle">心动指数</text>
+        </svg>
+      </div>
+      <div class="tier" id="tierTitle"></div>
+      <div class="tier-sub" id="tierDesc"></div>
+      <div class="ai-box hidden" id="aiBox"><div class="ai-tag">AI 深度解读</div><div id="aiText"></div></div>
+      <ul class="evi" id="eviList"><div class="evi-title">分析依据</div></ul>
+      <p class="fine">♡ 截图发给 TA 或发到姐妹群，看看大家怎么说 ♡</p>
+    </div>
+    <button class="btn" id="btnShare">生成分享图</button>
+    <img id="shareImg" class="hidden" alt="分享图">
+    <button class="btn ghost" id="btnAgain">再测一次</button>
+  </div>
+
+  <footer id="foot">
+    测试结果仅供娱乐参考，不构成感情建议<br>
+    聊天记录仅在你的浏览器本地处理，不会上传任何服务器
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+
+// ============ AI 接入位 ============
+// 部署 worker/ 目录里的 Cloudflare Worker（见 worker/wrangler.toml），
+// 把得到的地址填到这里即启用 AI 语义解读，例如：
+// const AI_ENDPOINT = "https://chat-test-ai.你的账号.workers.dev";
+// 留空 = 纯本地规则分析。
+const AI_ENDPOINT = "https://chat-test-ai.wangchongchong41.workers.dev";
+const AI_TOKEN = ""; // 接口需要鉴权时填
+// ===================================
+
+// 启用 AI 后聊天记录会发送到接口，页脚隐私说明同步更新
+if (AI_ENDPOINT){
+  document.getElementById("foot").innerHTML =
+    "测试结果仅供娱乐参考，不构成感情建议<br>" +
+    "AI 解读会将聊天记录发送到分析接口处理，不会存储";
+}
+
+const AFFECTION = ["晚安","早安","想你","想你了","想我","喜欢","爱你","宝贝","宝","宝儿","亲亲","么么","抱抱","在吗","在干嘛","干嘛呢","吃了吗","吃饭了吗","早点睡","照顾好自己","梦到","乖","小可爱","心疼","等我","接你","送你"];
+const LAUGH = ["哈哈","嘻嘻","嘿嘿","笑死","233","haha","hhh","咯咯"];
+const FUTURE = ["下次","一起","我们","以后","改天","有机会","带你去","陪你去","见面","约你","等你"];
+const TONE = ["呀","啦","呢","~","～","！","!","嘛","滴","噢","哦哦"];
+
+const TIERS = [
+  { min: 85, title: "♡ 双向奔赴", desc: "信号已经很明显了，TA 大概率对你动了心。差的只是一句捅破窗户纸的话。" },
+  { min: 65, title: "♡ 心动信号", desc: "TA 对你明显有好感，聊天的热度藏不住。再主动一点点，故事就开始了。" },
+  { min: 45, title: "♡ 友达以上", desc: "TA 把你放在朋友以上、恋人未满的位置。这个阶段最考验节奏，别急着表白。" },
+  { min: 25, title: "♡ 礼貌区", desc: "目前 TA 的回应更偏向礼貌和友好。先别自我感动，观察 TA 会不会主动找你。" },
+  { min: 0,  title: "♡ 清醒区", desc: "数据说实话：这段聊天里主动的一直是你。及时止损不丢人，你的热情值得更好的人。" }
+];
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),6000); }
+
+/* ---------- 解析聊天记录 ---------- */
+function parseChat(text){
+  const lines = text.split(/\r?\n/);
+  const msgs = [];
+  let cur = null;
+  const headTail = /^(.*?)[ \t　]+((?:\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}[ T])?\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)\s*$/;
+  const headLead = /^((?:\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}[ T])?\d{1,2}:\d{2}(?::\d{2})?)\s+(.*?)(?:[（(]\d+[）)]|<[^>]+>)?\s*$/;
+  for (const raw of lines){
+    const line = raw.trim();
+    if (!line) continue;
+    let m = line.match(headTail);
+    if (m && m[1].trim().length > 0 && m[1].trim().length <= 40){
+      cur = { sender: m[1].trim(), time: m[2], text: "" };
+      msgs.push(cur); continue;
+    }
+    m = line.match(headLead);
+    if (m && m[2].trim().length > 0 && m[2].trim().length <= 40 && /[一-龥A-Za-z]/.test(m[2])){
+      cur = { sender: m[2].trim(), time: m[1], text: "" };
+      msgs.push(cur); continue;
+    }
+    if (cur){ cur.text += (cur.text ? "\n" : "") + line; }
+    else { msgs.push({ sender: null, time: null, text: line, loose: true }); }
+  }
+  const named = msgs.filter(x => x.sender);
+  if (named.length >= 3) return named;
+  // 退化：按「昵称：内容」逐行解析
+  const out = [];
+  for (const raw of text.split(/\r?\n/)){
+    const line = raw.trim();
+    if (!line) continue;
+    const m = line.match(/^(.{1,30}?)[：:](.*)$/);
+    if (m) out.push({ sender: m[1].trim(), time: null, text: m[2].trim() });
+    else if (out.length) out[out.length-1].text += "\n" + line;
+  }
+  return out;
+}
+
+function parseTime(t){
+  if (!t) return null;
+  const m = t.match(/(?:(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})[ T])?(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\s*([AaPp])[Mm])?/);
+  if (!m) return null;
+  let h = +m[4], min = +m[5], s = +(m[6]||0);
+  if (m[7] && m[7].toLowerCase() === "p" && h < 12) h += 12;
+  if (m[7] && m[7].toLowerCase() === "a" && h === 12) h = 0;
+  if (m[1]) return new Date(+m[1], +m[2]-1, +m[3], h, min, s).getTime();
+  return (h*3600 + min*60 + s) * 1000;
+}
+
+function countIn(msgs, words){
+  let n = 0;
+  for (const x of msgs) for (const w of words){
+    n += x.text.split(w).length - 1;
+  }
+  return n;
+}
+
+/* ---------- 打分 ---------- */
+function analyze(msgs, myName, theirName){
+  const mine = msgs.filter(m => m.sender === myName && m.text.trim());
+  const theirs = msgs.filter(m => m.sender === theirName && m.text.trim());
+  if (!mine.length || !theirs.length) return null;
+
+  const msgRatio = theirs.length / mine.length;
+  const avgLen = arr => arr.reduce((a,b)=>a+b.text.replace(/\s/g,"").length,0)/arr.length;
+  const lenRatio = avgLen(theirs) / Math.max(avgLen(mine), 1);
+  const qThem = theirs.filter(m => /[?？吗呢吧啊嘛呀哈]+$/.test(m.text.trim()) || m.text.includes("吗") || m.text.includes("?")).length;
+  const qRate = qThem / theirs.length;
+  const affN = countIn(theirs, AFFECTION);
+  const laughN = countIn(theirs, LAUGH);
+  const futureN = countIn(theirs, FUTURE);
+  const toneN = countIn(theirs, TONE);
+  const toneRate = toneN / theirs.length;
+  const lastReal = [...msgs].reverse().find(m => m.text.trim());
+  const lastIsThem = lastReal && lastReal.sender === theirName;
+
+  // 深夜聊天（23:00-05:00）
+  const nightTheirs = theirs.filter(m => {
+    const t = parseTime(m.time);
+    if (t === null) return false;
+    const h = new Date(t).getHours();
+    return h >= 23 || h < 5;
+  }).length;
+
+  // 谁主动开启话题：间隔 >3 小时（或跨天）后先发言的人
+  const opens = { me: 0, them: 0 };
+  let prevT = null, prevSender = null;
+  for (const m of msgs){
+    const t = parseTime(m.time);
+    if (t !== null){
+      if (prevT === null || (t - prevT) > 3*3600*1000){
+        if (m.sender === theirName) opens.them++;
+        else if (m.sender === myName) opens.me++;
+      }
+      prevT = t; prevSender = m.sender;
+    }
+  }
+  const totalOpens = opens.me + opens.them;
+
+  // 回复速度：「我→TA」交替中 TA 的延迟中位数
+  const gaps = [];
+  for (let i = 1; i < msgs.length; i++){
+    if (msgs[i].sender === theirName && msgs[i-1].sender === myName){
+      const a = parseTime(msgs[i-1].time), b = parseTime(msgs[i].time);
+      if (a !== null && b !== null){
+        let d = (b - a) / 60000;
+        if (d < 0) d += 1440;
+        if (d >= 0 && d <= 720) gaps.push(d);
+      }
+    }
+  }
+  gaps.sort((a,b)=>a-b);
+  const medGap = gaps.length ? gaps[Math.floor(gaps.length/2)] : null;
+
+  // 已读不回：TA 隔了很久只回一句很短的
+  const coldReplies = theirs.filter(m => m.text.replace(/\s/g,"").length <= 5).length;
+  const coldRate = coldReplies / theirs.length;
+
+  let score = 0;
+  const evi = [];
+
+  // 消息数量比 15
+  if (msgRatio >= 1.5){ score += 15; evi.push(`TA 发了 ${theirs.length} 条消息，是你发的 ${msgRatio.toFixed(1)} 倍 —— 话多就是心动的证据`); }
+  else if (msgRatio >= 1.1){ score += 12; evi.push(`TA 发了 ${theirs.length} 条消息，比你更主动一些`); }
+  else if (msgRatio >= 0.9){ score += 8; evi.push(`你们发消息的数量基本持平，没有谁在敷衍谁`); }
+  else if (msgRatio >= 0.6){ score += 4; evi.push(`TA 发了 ${theirs.length} 条，比你少不少 —— 目前是你更主动`); }
+  else { evi.push(`TA 的消息数明显少于你（${theirs.length} 条 vs 你的 ${mine.length} 条）`); }
+
+  // 平均长度比 15
+  if (lenRatio >= 1.5){ score += 15; evi.push(`TA 平均每条消息比你长 ${Math.round((lenRatio-1)*100)}% —— 愿意为你打字的人不多了`); }
+  else if (lenRatio >= 1.15){ score += 12; evi.push(`TA 的消息平均比你长 ${Math.round((lenRatio-1)*100)}%，回复挺认真`); }
+  else if (lenRatio >= 0.85){ score += 8; evi.push(`你们的消息长度差不多，节奏对得上`); }
+  else if (lenRatio >= 0.5){ score += 4; evi.push(`TA 的回复偏短，平均只有你的一半多`); }
+  else { evi.push(`TA 的回复很短 —— 「嗯」「哦」式聊天是危险信号`); }
+
+  // 主动开启话题 15
+  if (totalOpens >= 2){
+    const r = opens.them / totalOpens;
+    if (r >= 0.7){ score += 15; evi.push(`TA 主动开启了 ${opens.them} 次话题（你 ${opens.me} 次）—— 想你的人忍不住先开口`); }
+    else if (r >= 0.45){ score += 10; evi.push(`开启话题你们差不多对半（TA ${opens.them} 次 / 你 ${opens.me} 次）`); }
+    else { score += 3; evi.push(`大部分话题是你起的头（你 ${opens.me} 次 / TA ${opens.them} 次）`); }
+  } else {
+    score += 8;
+  }
+
+  // 提问频率 10
+  if (qRate >= 0.25){ score += 10; evi.push(`TA 主动问了你 ${qThem} 次问题 —— 想继续聊下去的意思很明显`); }
+  else if (qRate >= 0.12){ score += 7; evi.push(`TA 问了 ${qThem} 次问题，有在主动延续话题`); }
+  else if (qThem > 0){ score += 3; evi.push(`TA 偶尔问问题（${qThem} 次），但更多时候是你在找话题`); }
+  else { evi.push(`TA 几乎没主动问过你问题 —— 聊天全靠你撑着`); }
+
+  // 亲昵词 15
+  const affRate = affN / theirs.length;
+  if (affRate >= 0.4){ score += 15; evi.push(`TA 说了 ${affN} 次亲昵词（晚安/想你/宝/抱抱…），暧昧浓度超标`); }
+  else if (affRate >= 0.2){ score += 11; evi.push(`TA 的消息里有 ${affN} 处亲昵表达，温度不低`); }
+  else if (affN > 0){ score += 5; evi.push(`TA 偶尔有亲昵表达（${affN} 处），还没到热的程度`); }
+  else { evi.push(`TA 全程没有亲昵表达 —— 语气相当冷静`); }
+
+  // 深夜聊天 5
+  if (nightTheirs >= 5){ score += 5; evi.push(`TA 有 ${nightTheirs} 条消息是深夜 23 点后发的 —— 愿意陪你熬夜的人不一般`); }
+  else if (nightTheirs > 0){ score += 3; evi.push(`深夜 23 点后 TA 发过 ${nightTheirs} 条消息，夜聊过的人关系都不简单`); }
+
+  // 语气词 5
+  if (toneRate >= 0.4){ score += 5; evi.push(`TA 的语气词浓度很高（呀/啦/呢/~）—— 跟你聊天情绪很松弛`); }
+  else if (toneRate >= 0.15){ score += 3; evi.push(`TA 时不时用语气词，聊天气氛不僵硬`); }
+
+  // 未来指向词 5
+  if (futureN >= 4){ score += 5; evi.push(`TA 说了 ${futureN} 次「下次/一起/我们」—— 已经在把你写进未来`); }
+  else if (futureN > 0){ score += 3; evi.push(`TA 提过 ${futureN} 次「下次/一起」这类话，有把你放进计划里`); }
+
+  // 回复速度 10（无时间戳则并入收尾项）
+  if (medGap !== null){
+    if (medGap <= 2){ score += 10; evi.push(`TA 平均约 ${Math.max(1,Math.round(medGap))} 分钟就回你 —— 基本是秒回`); }
+    else if (medGap <= 10){ score += 7; evi.push(`TA 平均 ${Math.round(medGap)} 分钟左右回你，速度不错`); }
+    else if (medGap <= 30){ score += 4; evi.push(`TA 平均 ${Math.round(medGap)} 分钟回一次，不紧不慢`); }
+    else { evi.push(`TA 平均要 ${Math.round(medGap)} 分钟以上才回 —— 你在 TA 的优先级不高`); }
+  } else if (lastIsThem){
+    score += 10;
+  }
+
+  // 收尾 5
+  if (lastIsThem){ score += 5; evi.push(`最后一条消息是 TA 发的 —— 不想让聊天结束的人，往往是动了心的人`); }
+  else { evi.push(`聊天最后停在你这里 —— 收尾的那个人总是更不舍一点`); }
+
+  if (laughN >= 3) evi.push(`TA 笑了 ${laughN} 次（哈哈/嘻嘻/笑死…），跟你聊天 TA 挺开心`);
+  if (coldRate >= 0.4 && theirs.length >= 10) evi.push(`注意：TA 有 ${coldReplies} 条消息短于 5 个字，冷淡回复占比偏高`);
+
+  score = Math.max(0, Math.min(100, score));
+  return { score, evi: evi.slice(0, 7) };
+}
+
+/* ---------- AI 语义解读（可选） ---------- */
+async function aiVerdict(msgs, myName, theirName, score){
+  if (!AI_ENDPOINT) return null;
+  const digest = msgs.slice(-200)
+    .map(m => `${m.sender === theirName ? "对方" : "自己"}：${m.text.slice(0,80)}`)
+    .join("\n");
+  try {
+    const r = await fetch(AI_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(AI_TOKEN ? { Authorization: "Bearer " + AI_TOKEN } : {}) },
+      body: JSON.stringify({
+        chat: digest.slice(0, 6000),
+        local_score: score,
+        prompt_hint: "分析对方是否喜欢自己"
+      })
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return typeof j.text === "string" ? j.text.slice(0, 600) : null;
+  } catch(e){ return null; }
+}
+
+/* ---------- 结果渲染 ---------- */
+async function showResult(score, evi, msgs, myName, theirName){
+  $("#inputCard").classList.add("hidden");
+  $("#resultCard").classList.remove("hidden");
+  const tier = TIERS.find(t => score >= t.min);
+  $("#rptNo").textContent = String(Math.floor(10000 + Math.random() * 89999));
+  $("#tierTitle").textContent = tier.title;
+  $("#tierDesc").textContent = tier.desc;
+  const list = $("#eviList");
+  list.innerHTML = '<div class="evi-title">分析依据</div>';
+  for (const e of evi){ const li = document.createElement("li"); li.textContent = e; list.appendChild(li); }
+  $("#aiBox").classList.add("hidden");
+  const C = 452.4;
+  $("#ringFg").style.strokeDashoffset = C;
+  $("#scoreText").textContent = "0";
+  $("#shareImg").classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  requestAnimationFrame(() => {
+    setTimeout(() => { $("#ringFg").style.strokeDashoffset = C * (1 - score/100); }, 60);
+    let cur = 0;
+    const step = () => { cur += Math.max(1, Math.round((score - cur) / 8));
+      if (cur >= score){ $("#scoreText").textContent = score; }
+      else { $("#scoreText").textContent = cur; requestAnimationFrame(step); } };
+    requestAnimationFrame(step);
+  });
+  if (msgs && AI_ENDPOINT){
+    const text = await aiVerdict(msgs, myName, theirName, score);
+    if (text){
+      $("#aiText").textContent = text;
+      $("#aiBox").classList.remove("hidden");
+    }
+  }
+}
+
+/* ---------- 交互 ---------- */
+$("#btnAnalyze").addEventListener("click", () => {
+  const text = $("#chatInput").value.trim();
+  if (text.length < 10){ toast("先把聊天记录粘贴进来，至少要有几轮对话哦"); return; }
+  const msgs = parseChat(text).filter(m => m.text && m.text.trim());
+  const senders = {};
+  msgs.forEach(m => { if (m.sender) senders[m.sender] = (senders[m.sender]||0) + 1; });
+  const names = Object.keys(senders).sort((a,b)=>senders[b]-senders[a]);
+  if (names.length < 2){
+    toast("没识别出两个人的对话。请检查格式：微信电脑版拖选消息复制，或用「昵称：内容」的格式");
+    return;
+  }
+  let me = $("#myName").value.trim(), them = $("#theirName").value.trim();
+  if (!me || !them){
+    $("#myName").value = names[1] || "";
+    $("#theirName").value = names[0];
+    toast(`已自动识别昵称：发消息最多的是「${names[0]}」。如果 TA 不是这个人，改一下昵称再点分析`);
+    return;
+  }
+  const norm = n => n.replace(/^@/, "").trim();
+  if (!senders[norm(them)] && !senders[them]){
+    toast(`没找到昵称「${them}」。识别到的昵称有：${names.slice(0,4).join("、")}`);
+    return;
+  }
+  const res = analyze(msgs, norm(me), norm(them));
+  if (!res){ toast("识别出的对话太少了，再多粘几轮聊天内容会更准"); return; }
+  showResult(res.score, res.evi, msgs, norm(me), norm(them));
+});
+
+$("#btnDemo").addEventListener("click", () => {
+  const d = new Date(); const fmt = n => `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${n}`;
+  $("#chatInput").value = [
+    `阿哲 ${fmt("21:02")}`, "下班了吗",
+    `小晴 ${fmt("21:03")}`, "刚下 今天好累", "你呢 吃饭了吗",
+    `阿哲 ${fmt("21:04")}`, "吃了 给你点了奶茶 半小时到",
+    `小晴 ${fmt("21:04")}`, "啊真的假的！！", "你怎么知道我想喝奶茶 哈哈哈哈哈",
+    `阿哲 ${fmt("21:05")}`, "你朋友圈三天发了两次 不难猜", "冰的去冰了",
+    `小晴 ${fmt("21:05")}`, "你居然记得我不喝冰的", "有点感动怎么回事",
+    `阿哲 ${fmt("21:07")}`, "到家跟我说一声",
+    `小晴 ${fmt("21:32")}`, "到家啦 奶茶也到了", "芋泥啵啵 是我最爱的那个", "你怎么什么都知道",
+    `阿哲 ${fmt("21:33")}`, "猜的", "快喝吧 早点休息",
+    `小晴 ${fmt("21:34")}`, "你今天怎么这么好啊", "说 是不是有什么事瞒着我 哈哈",
+    `阿哲 ${fmt("21:35")}`, "没有 就是", "觉得你今天挺辛苦的",
+    `小晴 ${fmt("21:37")}`, "那明天周六 你有空吗", "我请你吃饭吧 当回礼",
+    `阿哲 ${fmt("21:37")}`, "有空", "必须有空",
+    `小晴 ${fmt("21:38")}`, "哈哈哈哈好 那说定了", "我想想吃什么 你想吃啥",
+    `阿哲 ${fmt("21:39")}`, "都行 你定", "跟你吃饭吃什么都香",
+    `小晴 ${fmt("21:40")}`, "啧 今天嘴巴抹蜜了", "那我定好了发你",
+    `阿哲 ${fmt("22:58")}`, "晚安 今天辛苦了",
+    `小晴 ${fmt("22:59")}`, "晚安安", "明天见 期待住",
+    `阿哲 ${fmt("22:59")}`, "嗯 明天见"
+  ].join("\n");
+  $("#myName").value = "小晴";
+  $("#theirName").value = "阿哲";
+  toast("演示数据已载入，点「开始分析」看效果");
+});
+
+/* ---------- 快速答题 ---------- */
+const QUIZ = [
+  { t: "TA 一般多久回你消息？", o: [["基本秒回", 15], ["几分钟内", 11], ["半小时以上", 5], ["经常隔天才回", 0]] },
+  { t: "聊天时谁更常开启话题？", o: [["TA 经常主动找我", 20], ["差不多一半一半", 12], ["多数是我", 5], ["几乎都是我", 0]] },
+  { t: "TA 的回复一般是怎样的？", o: [["很长，还会反问我", 20], ["正常对话长度", 12], ["偏短但不敷衍", 6], ["嗯/哦/表情包", 0]] },
+  { t: "TA 会主动关心你的事吗？", o: [["经常问我的近况", 15], ["偶尔会问", 9], ["我提了才接话", 3], ["从不", 0]] },
+  { t: "TA 说过暧昧或亲昵的话吗？", o: [["经常说（晚安/想你/宝…）", 25], ["偶尔有一两句", 14], ["几乎没有", 4], ["完全没有", 0]] },
+  { t: "聊天一般是谁收尾？", o: [["TA，还总舍不得结束", 5], ["互道晚安那种", 4], ["我", 1], ["聊着聊着 TA 就消失", 0]] }
+];
+const quizBox = $("#quizBox");
+QUIZ.forEach((q, i) => {
+  const div = document.createElement("div");
+  div.className = "q";
+  div.innerHTML = `<div class="q-t">${i+1}. ${q.t}</div>` +
+    q.o.map(([label], j) => `<div class="opt" data-q="${i}" data-j="${j}">${label}</div>`).join("");
+  quizBox.appendChild(div);
+});
+const chosen = {};
+quizBox.addEventListener("click", e => {
+  const el = e.target.closest(".opt");
+  if (!el) return;
+  const q = el.dataset.q;
+  chosen[q] = +el.dataset.j;
+  quizBox.querySelectorAll(`.opt[data-q="${q}"]`).forEach(x => x.classList.remove("sel"));
+  el.classList.add("sel");
+});
+$("#btnQuiz").addEventListener("click", () => {
+  if (Object.keys(chosen).length < QUIZ.length){ toast("还有题没选完，选完再生成结果"); return; }
+  let score = 0; const evi = [];
+  QUIZ.forEach((q, i) => { const [label, pts] = q.o[chosen[i]]; score += pts;
+    if (pts >= q.o[0][1] * 0.6) evi.push(`「${label}」—— 这一项是明显的好感信号`);
+  });
+  if (!evi.length) evi.push("每一项都指向同一个答案：TA 目前没有把你放在特殊位置");
+  showResult(Math.min(100, score), evi.slice(0, 5));
+});
+
+/* ---------- 分享图 / 重测 / 切页 ---------- */
+$("#btnShare").addEventListener("click", async () => {
+  if (typeof html2canvas === "undefined"){ toast("生成图片的组件没加载出来，直接截图也可以哦"); return; }
+  const btn = $("#btnShare"); btn.textContent = "生成中…";
+  try {
+    const canvas = await html2canvas($("#resultInner"), { backgroundColor: "#fffdf9", scale: 2 });
+    const img = $("#shareImg");
+    img.src = canvas.toDataURL("image/png");
+    img.classList.remove("hidden");
+    btn.textContent = "长按上图保存 · 或重新生成";
+  } catch(e){ btn.textContent = "生成失败，直接截图也可以"; }
+});
+$("#btnAgain").addEventListener("click", () => {
+  $("#resultCard").classList.add("hidden");
+  $("#inputCard").classList.remove("hidden");
+});
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+  t.classList.add("on");
+  $("#paneChat").classList.toggle("hidden", t.dataset.tab !== "chat");
+  $("#paneQuiz").classList.toggle("hidden", t.dataset.tab !== "quiz");
+}));
+</script>
+</body>
+</html>
